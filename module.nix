@@ -99,7 +99,7 @@ in {
         };
 
         socketConfig = {
-          ListenStream = cfg.socket;
+          ListenStream = socket;
         };
       };
     };
