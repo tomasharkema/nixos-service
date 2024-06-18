@@ -1,3 +1,3 @@
-{self, ...}: final: prev: rec {
-  nixos-service = self.packages."${prev.system}".default;
+{self, ...}: final: prev: {
+  nixos-service = self.packages."${prev.system}".nixos-service;
 }
