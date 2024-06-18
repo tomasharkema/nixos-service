@@ -79,6 +79,7 @@ in {
 
       systemd.services.nixos-service = {
         description = "nixos-service";
+        enable = true;
 
         wantedBy = ["multi-user.target"];
 
