@@ -3,6 +3,7 @@ package main
 // curl --unix-socket /run/nixos-service.sock http://localhost -d "derp"
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -161,11 +162,15 @@ func uploadPath(ctx context.Context) {
 
 		fmt.Println("Path", path)
 
+		var stderrBuf *bytes.Buffer
+
 		cmd := exec.Command("attic", "push", *atticServerName, "-j1", path)
+		cmd.Stderr = stderrBuf
 		out, err := cmd.Output()
 		if err != nil {
-			fmt.Println("Error:", err)
+			fmt.Println("Error:", err, stderrBuf.String())
 		}
+
 		fmt.Println("Output: ", string(out), cmd.ProcessState)
 	}
 }

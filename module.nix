@@ -37,29 +37,17 @@ in {
     secretPath = mkOption {
       type = types.str;
     };
+
+    mode = mkOption {
+      type = types.str;
+      default = "0755";
+    };
   };
 
   config = let
     runtimeDirectory = "nixos-service";
     socket = "/run/${runtimeDirectory}/nixos-service.sock";
 
-    # atPostBuildScript = pkgs.writeScript "upload-to-cache-at.sh" ''
-    #   {
-    #     echo "Uploading paths $@"
-    #     ${pkgs.attic}/bin/attic login "${cfg.serverName}" "${cfg.serverAddress}" "$(cat "${config.age.secrets.attic-key.path}")"
-    #     ${pkgs.attic}/bin/attic push "${cfg.serverName}:tomas" -j1 $@
-    #     echo "Uploaded paths $@"
-    #   } |& tee /var/log/attic-upload.log
-    # '';
-    # postBuildScript = pkgs.writeScript "upload-to-cache.sh" ''
-    #   set -eu
-    #   set -f # disable globbing
-    #   export IFS=' '
-
-    #   echo "Uploading paths $OUT_PATHS"
-
-    #   echo "${pkgs.su}/bin/su -c '${atPostBuildScript} $OUT_PATHS' tomas" | ${pkgs.at}/bin/at -m -q b now
-    # '';
     curlCommand = pkgs.writeScript "upload-to-cache.sh" ''
       #!/bin/sh
       set -x
@@ -86,8 +74,8 @@ in {
 
         socketConfig = {
           SocketGroup = cfg.group;
-          SocketMode = "0777";
-          DirectoryMode = "0777";
+          SocketMode = cfg.mode;
+          DirectoryMode = cfg.mode;
         };
       };
 
@@ -110,8 +98,10 @@ in {
         serviceConfig = {
           Group = cfg.group;
           RuntimeDirectory = runtimeDirectory;
-          RuntimeDirectoryMode = "0777";
+          RuntimeDirectoryMode = cfg.mode;
           ExecStart = "${lib.getExe pkgs.nixos-service} socket";
+          Restart = "on-failure";
+          RestartSec = 5;
         };
       };
     };
