@@ -61,6 +61,8 @@ in {
     #   echo "${pkgs.su}/bin/su -c '${atPostBuildScript} $OUT_PATHS' tomas" | ${pkgs.at}/bin/at -m -q b now
     # '';
     curlCommand = pkgs.writeScript "upload-to-cache.sh" ''
+      #!/bin/sh
+      set -x
       set -eu
       set -f # disable globbing
       export IFS=' '
