@@ -110,6 +110,8 @@ in {
           Group = cfg.group;
           RuntimeDirectory = runtimeDirectory;
           RuntimeDirectoryMode = cfg.mode;
+          StateDirectory = "nixos-service";
+          StateDirectoryMode = cfg.mode;
           ExecStart = "${lib.getExe pkgs.nixos-service} socket";
           Restart = "on-failure";
           RestartSec = 5;
