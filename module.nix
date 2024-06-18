@@ -96,7 +96,7 @@ in {
 
         wantedBy = ["multi-user.target"];
 
-        path = with pkgs; [attic-client dbus];
+        path = with pkgs; [attic dbus];
 
         environment = {
           NIXOS_SERVICE_ATTIC_SERVER_NAME = cfg.serverName;
