@@ -1,3 +1,3 @@
-{self, ...}: final: prev: {
-  nixos-service = self.packages."${prev.system}".nixos-service;
+final: prev: {
+  nixos-service = prev.pkgs.callPackage ./package.nix {};
 }
