@@ -64,12 +64,15 @@ in {
 
       environment.variables.NIXOS_SERVICE_SOCK_PATH = socket;
 
-      users.users = {
-        "${cfg.user}" = {
-          group = cfg.group;
-          isSystemUser = true;
+      users = {
+        users = {
+          "${cfg.user}" = {
+            group = cfg.group;
+            isSystemUser = true;
+          };
+          root.extraGroups = [cfg.group];
         };
-        root.extraGroups = [cfg.group];
+        groups."${cfg.group}" = {};
       };
 
       systemd.sockets.nixos-service = {
