@@ -57,7 +57,7 @@ in {
 
       echo "Uploading paths $OUT_PATHS"
 
-      exec ${lib.getExe pkgs.nixos-service} upload -s "${socket}" "$OUT_PATHS"
+      exec ${lib.getExe pkgs.nixos-service} upload -s "${socket}" "$OUT_PATHS" || true
     '';
     # $NIXOS_SERVICE_SOCK_PATH
   in
@@ -85,11 +85,10 @@ in {
 
         wantedBy = ["multi-user.target"];
 
-        path = [pkgs.attic-client pkgs.dbus];
+        path = with pkgs; [attic-client dbus];
 
         environment = {
-          NIXOS_SERVICE_ATTIC_NAME = "nixos-service";
-          NIXOS_SERVICE_ATTIC_SERVER_NAME = "nixos-service:${cfg.serverName}";
+          NIXOS_SERVICE_ATTIC_SERVER_NAME = cfg.serverName;
           NIXOS_SERVICE_ATTIC_URL = cfg.serverUrl;
           NIXOS_SERVICE_ATTIC_SECRET_PATH = cfg.secretPath;
           NIXOS_SERVICE_SOCK_PATH = socket;

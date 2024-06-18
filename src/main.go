@@ -27,8 +27,10 @@ var (
 
 	sockPath = app.Flag("socket", "Channel to post to.").Short('s').Envar("NIXOS_SERVICE_SOCK_PATH").Required().String()
 
-	socketCommand   = app.Command("socket", "run as socket")
-	atticName       = socketCommand.Flag("attic-name", "Attic name").Envar("NIXOS_SERVICE_ATTIC_NAME").Required().String()
+	socketCommand = app.Command("socket", "run as socket")
+
+	atticName = "nixos-service"
+
 	atticServerName = socketCommand.Flag("attic-server-name", "Attic server name").Envar("NIXOS_SERVICE_ATTIC_SERVER_NAME").Required().String()
 	atticUrl        = socketCommand.Flag("attic-url", "Attic url").Envar("NIXOS_SERVICE_ATTIC_URL").Required().String()
 	atticSecretPath = socketCommand.Flag("attic-secret-path", "Attic name").Envar("NIXOS_SERVICE_ATTIC_SECRET_PATH").Required().String()
@@ -147,10 +149,11 @@ func uploadPath(ctx context.Context) {
 
 	atticSecret, err := os.ReadFile(*atticSecretPath)
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 
-	res, err := exec.Command("attic", "login", *atticName, *atticUrl, string(atticSecret)).Output()
+	fmt.Println("login", atticName, *atticUrl, string(atticSecret))
+	res, err := exec.Command("attic", "login", atticName, *atticUrl, string(atticSecret)).Output()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -163,8 +166,8 @@ func uploadPath(ctx context.Context) {
 		fmt.Println("Path", path)
 
 		var stderrBuf bytes.Buffer
-
-		cmd := exec.Command("attic", "push", *atticServerName, "-j1", path)
+		fmt.Println("push", fmt.Sprintf("%s:%s", atticName, *atticServerName), "-j1", path)
+		cmd := exec.Command("attic", "push", fmt.Sprintf("%s:%s", atticName, *atticServerName), "-j1", path)
 		cmd.Stderr = &stderrBuf
 		out, err := cmd.Output()
 		if err != nil {
