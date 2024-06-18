@@ -97,7 +97,7 @@ in {
 
         wantedBy = ["multi-user.target"];
 
-        path = [pkgs.attic-client];
+        path = [pkgs.attic-client pkgs.dbus];
 
         environment = {
           NIXOS_SERVICE_ATTIC_NAME = "nixos-service";
