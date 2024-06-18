@@ -67,8 +67,9 @@ in {
 
       echo "Uploading paths $OUT_PATHS"
 
-      exec ${pkgs.curl}/bin/curl --unix-socket $NIXOS_SERVICE_SOCK_PATH http://localhost -d "$OUT_PATHS" 2>/dev/null
+      exec ${pkgs.curl}/bin/curl --unix-socket http://localhost "${socket}" -d "$OUT_PATHS" 2>/dev/null
     '';
+    # $NIXOS_SERVICE_SOCK_PATH
   in
     mkIf cfg.enable {
       nix.settings.post-build-hook = curlCommand;

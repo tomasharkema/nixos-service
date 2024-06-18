@@ -20,7 +20,7 @@
 
     packages = eachSystem (system: {
       nixos-service = nixpkgs.legacyPackages.${system}.callPackage ./package.nix {};
-      default = self.packages."${system}".hello;
+      default = self.packages."${system}".nixos-service;
     });
 
     overlays.default = import ./overlay.nix;
