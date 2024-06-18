@@ -22,5 +22,7 @@
       nixos-service = nixpkgs.legacyPackages.${system}.callPackage ./package.nix {};
       default = self.packages."${system}".hello;
     });
+
+    overlays.default = import ./overlay.nix;
   };
 }
