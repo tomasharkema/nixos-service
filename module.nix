@@ -89,7 +89,7 @@ in {
 
         wantedBy = ["multi-user.target"];
 
-        path = [pkgs.attic];
+        path = [pkgs.attic-client];
 
         environment = {
           NIXOS_SERVICE_ATTIC_NAME = "nixos-service";
