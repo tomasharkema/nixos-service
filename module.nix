@@ -60,7 +60,10 @@ in {
     '';
   in
     mkIf cfg.enable {
-      nix.settings.post-build-hook = curlCommand;
+      nix.settings = {
+        post-build-hook = curlCommand;
+        trusted-users = ["${cfg.user}"];
+      };
 
       environment.variables.NIXOS_SERVICE_SOCK_PATH = socket;
 
