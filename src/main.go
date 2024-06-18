@@ -162,10 +162,10 @@ func uploadPath(ctx context.Context) {
 
 		fmt.Println("Path", path)
 
-		var stderrBuf *bytes.Buffer
+		var stderrBuf bytes.Buffer
 
 		cmd := exec.Command("attic", "push", *atticServerName, "-j1", path)
-		cmd.Stderr = stderrBuf
+		cmd.Stderr = &stderrBuf
 		out, err := cmd.Output()
 		if err != nil {
 			fmt.Println("Error:", err, stderrBuf.String())
