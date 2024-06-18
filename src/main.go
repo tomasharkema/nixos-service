@@ -16,6 +16,7 @@ import (
 
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/coreos/go-systemd/daemon"
+	"github.com/godbus/dbus/v5"
 )
 
 var (
@@ -70,7 +71,7 @@ func main() {
 
 func runSocket(ctx context.Context) {
 
-	// go pollUnits(ctx)
+	go pollUnits(ctx)
 	// go watchdog(ctx)
 	go handleSocket(ctx)
 	go uploadPath(ctx)
@@ -169,35 +170,35 @@ func uploadPath(ctx context.Context) {
 	}
 }
 
-// func pollUnits(ctx context.Context) {
-// 	conn, err := dbus.ConnectSessionBus()
-// 	if err != nil {
-// 		panic(err)
-// 	}
+func pollUnits(ctx context.Context) {
+	conn, err := dbus.ConnectSessionBus()
+	if err != nil {
+		panic(err)
+	}
 
-// 	rules := []string{
-// 		"type='signal',member='Notify',path='/org/freedesktop/Notifications',interface='org.freedesktop.Notifications'",
-// 		"type='method_call',member='Notify',path='/org/freedesktop/Notifications',interface='org.freedesktop.Notifications'",
-// 		"type='method_return',member='Notify',path='/org/freedesktop/Notifications',interface='org.freedesktop.Notifications'",
-// 		"type='error',member='Notify',path='/org/freedesktop/Notifications',interface='org.freedesktop.Notifications'",
-// 	}
-// 	var flag uint = 0
+	rules := []string{
+		"type='signal',member='Notify',path='/org/freedesktop/Notifications',interface='org.freedesktop.Notifications'",
+		"type='method_call',member='Notify',path='/org/freedesktop/Notifications',interface='org.freedesktop.Notifications'",
+		"type='method_return',member='Notify',path='/org/freedesktop/Notifications',interface='org.freedesktop.Notifications'",
+		"type='error',member='Notify',path='/org/freedesktop/Notifications',interface='org.freedesktop.Notifications'",
+	}
+	var flag uint = 0
 
-// 	call := conn.BusObject().CallWithContext(ctx, "org.freedesktop.DBus.Monitoring.BecomeMonitor", 0, rules, flag)
-// 	if call.Err != nil {
-// 		panic(call.Err)
-// 	}
+	call := conn.BusObject().CallWithContext(ctx, "org.freedesktop.DBus.Monitoring.BecomeMonitor", 0, rules, flag)
+	if call.Err != nil {
+		panic(call.Err)
+	}
 
-// 	c := make(chan *dbus.Message, 10)
-// 	conn.Eavesdrop(c)
+	c := make(chan *dbus.Message, 10)
+	conn.Eavesdrop(c)
 
-// 	fmt.Println("Monitoring notifications")
+	fmt.Println("Monitoring notifications")
 
-// 	for v := range c {
+	for v := range c {
 
-// 		fmt.Println(v)
-// 	}
-// }
+		fmt.Println("[dbus]", v)
+	}
+}
 
 // func watchdog(ctx context.Context) {
 // 	interval, err := daemon.SdWatchdogEnabled(false)

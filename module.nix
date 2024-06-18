@@ -83,6 +83,12 @@ in {
       systemd.sockets.nixos-service = {
         description = "Socket to communicate with myservice";
         listenStreams = [socket];
+
+        socketConfig = {
+          SocketGroup = cfg.group;
+          SocketMode = "0777";
+          DirectoryMode = "0777";
+        };
       };
 
       systemd.services.nixos-service = {
@@ -104,7 +110,7 @@ in {
         serviceConfig = {
           Group = cfg.group;
           RuntimeDirectory = runtimeDirectory;
-          RuntimeDirectoryMode = "0755";
+          RuntimeDirectoryMode = "0777";
           ExecStart = "${lib.getExe pkgs.nixos-service} socket";
         };
       };
