@@ -50,7 +50,6 @@ in {
 
     curlCommand = pkgs.writeScript "upload-to-cache.sh" ''
       #!/bin/sh
-      set -x
       set -eu
       set -f # disable globbing
       export IFS=' '
@@ -59,20 +58,26 @@ in {
 
       exec ${lib.getExe pkgs.nixos-service} upload -s "${socket}" "$OUT_PATHS" || true
     '';
-    # $NIXOS_SERVICE_SOCK_PATH
   in
     mkIf cfg.enable {
       nix.settings.post-build-hook = curlCommand;
 
       environment.variables.NIXOS_SERVICE_SOCK_PATH = socket;
 
-      users.groups."${cfg.group}" = {};
+      users.users = {
+        "${cfg.user}" = {
+          group = cfg.group;
+          isSystemUser = true;
+        };
+        root.extraGroups = [cfg.group];
+      };
 
       systemd.sockets.nixos-service = {
         description = "Socket to communicate with myservice";
         listenStreams = [socket];
 
         socketConfig = {
+          SocketUser = cfg.user;
           SocketGroup = cfg.group;
           SocketMode = cfg.mode;
           DirectoryMode = cfg.mode;
@@ -95,6 +100,7 @@ in {
         };
 
         serviceConfig = {
+          User = cfg.user;
           Group = cfg.group;
           RuntimeDirectory = runtimeDirectory;
           RuntimeDirectoryMode = cfg.mode;
