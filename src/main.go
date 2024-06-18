@@ -66,9 +66,6 @@ func main() {
 		uploadToSocket(ctx)
 
 	}
-
-	<-ctx.Done()
-	log.Println("Exit...")
 }
 
 func runSocket(ctx context.Context) {
