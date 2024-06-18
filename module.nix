@@ -103,6 +103,7 @@ in {
           NIXOS_SERVICE_ATTIC_URL = cfg.serverUrl;
           NIXOS_SERVICE_ATTIC_SECRET_PATH = cfg.secretPath;
           NIXOS_SERVICE_SOCK_PATH = socket;
+          XDG_CONFIG_HOME = "/var/lib/nixos-service";
         };
 
         serviceConfig = {
