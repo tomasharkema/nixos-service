@@ -160,11 +160,12 @@ func uploadPath(ctx context.Context) {
 
 		fmt.Println("Path", path)
 
-		out, err := exec.Command("attic", "push", *atticServerName, "-j1", path).Output()
+		cmd := exec.Command("attic", "push", *atticServerName, "-j1", path)
+		out, err := cmd.Output()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Error:", err)
 		}
-		fmt.Println("Output: ", string(out))
+		fmt.Println("Output: ", string(out), cmd.ProcessState)
 	}
 }
 
