@@ -14,11 +14,26 @@ import (
 	"os/signal"
 	"strings"
 
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/coreos/go-systemd/daemon"
 )
 
-var pathChannel = make(chan string, 300)
-var sockPath = os.Getenv("NIXOS_SERVICE_SOCK_PATH")
+var (
+	pathChannel = make(chan string, 300)
+
+	app = kingpin.New("chat", "A command-line chat application.")
+
+	sockPath = app.Flag("socket", "Channel to post to.").Short('s').Envar("NIXOS_SERVICE_SOCK_PATH").Required().String()
+
+	socketCommand   = app.Command("socket", "run as socket")
+	atticName       = socketCommand.Flag("attic-name", "Attic name").Envar("NIXOS_SERVICE_ATTIC_NAME").Required().String()
+	atticServerName = socketCommand.Flag("attic-server-name", "Attic server name").Envar("NIXOS_SERVICE_ATTIC_SERVER_NAME").Required().String()
+	atticUrl        = socketCommand.Flag("attic-url", "Attic url").Envar("NIXOS_SERVICE_ATTIC_URL").Required().String()
+	atticSecretPath = socketCommand.Flag("attic-secret-path", "Attic name").Envar("NIXOS_SERVICE_ATTIC_SECRET_PATH").Required().String()
+
+	uploadCommand = app.Command("upload", "run as socket")
+	uploadNixPath = uploadCommand.Arg("path", "path").Required().String()
+)
 
 // func HelloServer(w http.ResponseWriter, req *http.Request) {
 // 	io.WriteString(w, "hello socket activated world!\n")
@@ -43,6 +58,21 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
+	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
+	case socketCommand.FullCommand():
+		runSocket(ctx)
+
+	case uploadCommand.FullCommand():
+		uploadToSocket(ctx)
+
+	}
+
+	<-ctx.Done()
+	log.Println("Exit...")
+}
+
+func runSocket(ctx context.Context) {
+
 	// go pollUnits(ctx)
 	// go watchdog(ctx)
 	go handleSocket(ctx)
@@ -51,12 +81,36 @@ func main() {
 	daemon.SdNotify(false, daemon.SdNotifyReady)
 
 	<-ctx.Done()
-	os.Remove(sockPath)
+	os.Remove(*sockPath)
 	log.Println("Exit...")
 }
 
+func uploadToSocket(ctx context.Context) {
+	fmt.Println("Upload", *uploadNixPath)
+
+	httpc := http.Client{
+		Transport: &http.Transport{
+			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+				return net.Dial("unix", *sockPath)
+			},
+		},
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "http://localhost", strings.NewReader(*uploadNixPath))
+	if err != nil {
+		panic(err)
+	}
+
+	res, err := httpc.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(res)
+}
+
 func handleSocket(ctx context.Context) {
-	unixListener, err := net.Listen("unix", sockPath)
+	unixListener, err := net.Listen("unix", *sockPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -92,17 +146,12 @@ func handleSocket(ctx context.Context) {
 
 func uploadPath(ctx context.Context) {
 
-	atticName := os.Getenv("NIXOS_SERVICE_ATTIC_NAME")
-	atticServerName := os.Getenv("NIXOS_SERVICE_ATTIC_SERVER_NAME")
-	atticUrl := os.Getenv("NIXOS_SERVICE_ATTIC_URL")
-	atticSecretPath := os.Getenv("NIXOS_SERVICE_ATTIC_SECRET_PATH")
-
-	atticSecret, err := os.ReadFile(atticSecretPath)
+	atticSecret, err := os.ReadFile(*atticSecretPath)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	res, err := exec.Command("attic", "login", atticName, atticUrl, string(atticSecret)).Output()
+	res, err := exec.Command("attic", "login", *atticName, *atticUrl, string(atticSecret)).Output()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -114,7 +163,7 @@ func uploadPath(ctx context.Context) {
 
 		fmt.Println("Path", path)
 
-		out, err := exec.Command("attic", "push", atticServerName, "-j1", path).Output()
+		out, err := exec.Command("attic", "push", *atticServerName, "-j1", path).Output()
 		if err != nil {
 			fmt.Println(err)
 		}

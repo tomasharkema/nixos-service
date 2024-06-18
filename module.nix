@@ -69,7 +69,7 @@ in {
 
       echo "Uploading paths $OUT_PATHS"
 
-      exec ${pkgs.curl}/bin/curl --unix-socket http://localhost "${socket}" -d "$OUT_PATHS" 2>/dev/null
+      exec ${lib.getExe pkgs.nixos-service} upload -s "${socket}" "$OUT_PATHS"
     '';
     # $NIXOS_SERVICE_SOCK_PATH
   in
@@ -105,7 +105,7 @@ in {
           Group = cfg.group;
           RuntimeDirectory = runtimeDirectory;
           RuntimeDirectoryMode = "0755";
-          ExecStart = "${lib.getExe pkgs.nixos-service}";
+          ExecStart = "${lib.getExe pkgs.nixos-service} socket";
         };
       };
     };
