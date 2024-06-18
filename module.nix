@@ -77,6 +77,11 @@ in {
 
       users.groups."${cfg.group}" = {};
 
+      systemd.sockets.nixos-service = {
+        description = "Socket to communicate with myservice";
+        listenStreams = [socket];
+      };
+
       systemd.services.nixos-service = {
         description = "nixos-service";
         enable = true;
@@ -96,10 +101,6 @@ in {
           RuntimeDirectory = runtimeDirectory;
           RuntimeDirectoryMode = "0755";
           ExecStart = "${lib.getExe pkgs.nixos-service}";
-        };
-
-        socketConfig = {
-          ListenStream = socket;
         };
       };
     };
