@@ -153,7 +153,9 @@ func uploadPath(ctx context.Context) {
 	}
 
 	fmt.Println("login", atticName, *atticUrl, string(atticSecret))
-	res, err := exec.Command("attic", "login", atticName, *atticUrl, string(atticSecret)).Output()
+	cmd := exec.Command("attic", "login", atticName, *atticUrl, string(atticSecret))
+	cmd.Env = os.Environ()
+	res, err := cmd.Output()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -169,6 +171,7 @@ func uploadPath(ctx context.Context) {
 		fmt.Println("push", fmt.Sprintf("%s:%s", atticName, *atticServerName), "-j1", path)
 		cmd := exec.Command("attic", "push", fmt.Sprintf("%s:%s", atticName, *atticServerName), "-j1", path)
 		cmd.Stderr = &stderrBuf
+		cmd.Env = os.Environ()
 		out, err := cmd.Output()
 		if err != nil {
 			fmt.Println("Error:", err, stderrBuf.String())
