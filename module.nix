@@ -67,55 +67,57 @@ in {
 
       environment.variables.NIXOS_SERVICE_SOCK_PATH = socket;
 
-      users = {
-        users = {
-          "${cfg.user}" = {
-            group = cfg.group;
-            isSystemUser = true;
+      # users = {
+      #   users = {
+      #     "${cfg.user}" = {
+      #       group = cfg.group;
+      #       isSystemUser = true;
+      #     };
+      #     root.extraGroups = [cfg.group];
+      #   };
+      #   groups."${cfg.group}" = {};
+      # };
+
+      systemd.user = {
+        sockets.nixos-service = {
+          description = "Socket to communicate with myservice";
+          listenStreams = [socket];
+
+          socketConfig = {
+            SocketUser = cfg.user;
+            SocketGroup = cfg.group;
+            SocketMode = cfg.mode;
+            DirectoryMode = cfg.mode;
           };
-          root.extraGroups = [cfg.group];
-        };
-        groups."${cfg.group}" = {};
-      };
-
-      systemd.sockets.nixos-service = {
-        description = "Socket to communicate with myservice";
-        listenStreams = [socket];
-
-        socketConfig = {
-          SocketUser = cfg.user;
-          SocketGroup = cfg.group;
-          SocketMode = cfg.mode;
-          DirectoryMode = cfg.mode;
-        };
-      };
-
-      systemd.services.nixos-service = {
-        description = "nixos-service";
-        enable = true;
-
-        wantedBy = ["multi-user.target"];
-
-        path = with pkgs; [attic dbus];
-
-        environment = {
-          NIXOS_SERVICE_ATTIC_SERVER_NAME = cfg.serverName;
-          NIXOS_SERVICE_ATTIC_URL = cfg.serverUrl;
-          NIXOS_SERVICE_ATTIC_SECRET_PATH = cfg.secretPath;
-          NIXOS_SERVICE_SOCK_PATH = socket;
-          XDG_CONFIG_HOME = "/var/lib/nixos-service";
         };
 
-        serviceConfig = {
-          User = cfg.user;
-          Group = cfg.group;
-          RuntimeDirectory = runtimeDirectory;
-          RuntimeDirectoryMode = cfg.mode;
-          StateDirectory = "nixos-service";
-          StateDirectoryMode = cfg.mode;
-          ExecStart = "${lib.getExe pkgs.nixos-service} socket";
-          Restart = "on-failure";
-          RestartSec = 5;
+        services.nixos-service = {
+          description = "nixos-service";
+          enable = true;
+
+          wantedBy = ["multi-user.target"];
+
+          path = with pkgs; [attic dbus];
+
+          environment = {
+            NIXOS_SERVICE_ATTIC_SERVER_NAME = cfg.serverName;
+            NIXOS_SERVICE_ATTIC_URL = cfg.serverUrl;
+            NIXOS_SERVICE_ATTIC_SECRET_PATH = cfg.secretPath;
+            NIXOS_SERVICE_SOCK_PATH = socket;
+            # XDG_CONFIG_HOME = "/var/lib/nixos-service";
+          };
+
+          serviceConfig = {
+            # User = cfg.user;
+            # Group = cfg.group;
+            RuntimeDirectory = runtimeDirectory;
+            # RuntimeDirectoryMode = cfg.mode;
+            # StateDirectory = "nixos-service";
+            # StateDirectoryMode = cfg.mode;
+            ExecStart = "${lib.getExe pkgs.nixos-service} socket";
+            Restart = "on-failure";
+            RestartSec = 5;
+          };
         };
       };
     };
