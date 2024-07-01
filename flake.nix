@@ -24,5 +24,7 @@
     });
 
     overlays.default = import ./overlay.nix;
+
+    inherit nixpkgs;
   };
 }
