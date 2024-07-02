@@ -46,7 +46,7 @@ in {
 
   config = let
     runtimeDirectory = "nixos-service";
-    socket = "/run/${runtimeDirectory}/nixos-service.sock";
+    socket = "~/.nixos-service.sock";
 
     curlCommand = pkgs.writeScript "upload-to-cache.sh" ''
       #!/bin/sh
@@ -56,7 +56,7 @@ in {
 
       echo "Uploading paths $OUT_PATHS"
 
-      exec ${lib.getExe pkgs.nixos-service} upload -s "${socket}" "$OUT_PATHS" || true
+      ${lib.getExe pkgs.nixos-service} upload -s "${socket}" "$OUT_PATHS" || true
     '';
   in
     mkIf cfg.enable {
@@ -83,12 +83,12 @@ in {
           description = "Socket to communicate with myservice";
           listenStreams = [socket];
 
-          socketConfig = {
-            SocketUser = cfg.user;
-            SocketGroup = cfg.group;
-            SocketMode = cfg.mode;
-            DirectoryMode = cfg.mode;
-          };
+          # socketConfig = {
+          #   SocketUser = cfg.user;
+          #   SocketGroup = cfg.group;
+          #   SocketMode = cfg.mode;
+          #   DirectoryMode = cfg.mode;
+          # };
         };
 
         services.nixos-service = {
@@ -96,6 +96,7 @@ in {
           enable = true;
 
           wantedBy = ["multi-user.target"];
+          # requires = ["nixos-service.socket"];
 
           path = with pkgs; [attic-client dbus];
 
@@ -110,7 +111,7 @@ in {
           serviceConfig = {
             # User = cfg.user;
             # Group = cfg.group;
-            RuntimeDirectory = runtimeDirectory;
+            # RuntimeDirectory = runtimeDirectory;
             # RuntimeDirectoryMode = cfg.mode;
             # StateDirectory = "nixos-service";
             # StateDirectoryMode = cfg.mode;
