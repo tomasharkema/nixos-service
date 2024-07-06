@@ -79,7 +79,7 @@ in {
       systemd.user = {
         sockets.nixos-service = {
           description = "Socket to communicate with myservice";
-          listenStreams = [socket];
+          # listenStreams = [socket];
 
           wantedBy = ["sockets.target"];
           socketConfig = {
