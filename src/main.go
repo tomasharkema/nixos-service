@@ -16,7 +16,9 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kingpin/v2"
+	"github.com/coreos/go-systemd/activation"
 	"github.com/coreos/go-systemd/daemon"
+
 	"github.com/godbus/dbus/v5"
 )
 
@@ -111,10 +113,10 @@ func uploadToSocket(ctx context.Context) {
 }
 
 func handleSocket(ctx context.Context) {
-	unixListener, err := net.Listen("unix", *sockPath)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// unixListener, err := net.Listen("unix", *sockPath)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	fmt.Println("Start socket")
 
@@ -139,7 +141,16 @@ func handleSocket(ctx context.Context) {
 		Handler: mux,
 	}
 
-	err = server.Serve(unixListener)
+	listeners, err := activation.Listeners(true) // ❶
+	if err != nil {
+		log.Panicf("cannot retrieve listeners: %s", err)
+	}
+	if len(listeners) != 1 {
+		log.Panicf("unexpected number of socket activation (%d != 1)",
+			len(listeners))
+	}
+
+	err = server.Serve(listeners[0])
 	if err != nil {
 		panic(err)
 	}
