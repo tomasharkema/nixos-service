@@ -5,7 +5,7 @@ buildGoModule rec {
 
   src = ./src;
 
-  vendorHash = "sha256-yknwiZBXGLxaT5iHIsahx+dkd0viGV9Mo2ku99bUicM=";
+  vendorHash = "sha256-E5XvYJiMz3yBcCTAMEJeowOFCpDZzS5RzSpbMe7qHlk=";
 
   meta.mainProgram = "${pname}";
 }
