@@ -45,7 +45,9 @@ in {
   };
 
   config = let
-    socketPath = "/run/nixos-service/daemon.sock";
+    runtimeDirectory = "nixos-service";
+    socket = "/run/${runtimeDirectory}/nixos-service.sock";
+
     curlCommand = pkgs.writeScript "upload-to-cache.sh" ''
       #!/bin/sh
       set -eu
@@ -54,7 +56,7 @@ in {
 
       echo "Uploading paths $OUT_PATHS"
 
-      ${lib.getExe pkgs.nixos-service} upload -s "${socketPath}" "$OUT_PATHS" || true
+      ${lib.getExe pkgs.nixos-service} upload -s "${socket}" "$OUT_PATHS" || true
     '';
   in
     mkIf cfg.enable {
@@ -63,18 +65,18 @@ in {
         trusted-users = ["${cfg.user}"];
       };
 
-      environment.variables.NIXOS_SERVICE_SOCK_PATH = "${socketPath}";
+      environment.variables.NIXOS_SERVICE_SOCK_PATH = "${socket}";
 
-      # users = {
-      #   users = {
-      #     "${cfg.user}" = {
-      #       group = cfg.group;
-      #       isSystemUser = true;
-      #     };
-      #     root.extraGroups = [cfg.group];
-      #   };
-      #   groups."${cfg.group}" = {};
-      # };
+      users = {
+        users = {
+          "${cfg.user}" = {
+            group = cfg.group;
+            isSystemUser = true;
+          };
+          root.extraGroups = [cfg.group];
+        };
+        groups."${cfg.group}" = {};
+      };
 
       systemd = {
         sockets.nixos-service = {
@@ -83,8 +85,13 @@ in {
 
           wantedBy = ["sockets.target"];
           socketConfig = {
-            ListenStream = "${socketPath}";
-            RuntimeDirectory = "nixos-service";
+            ListenStream = "${socket}";
+            RuntimeDirectory = runtimeDirectory;
+
+            SocketUser = cfg.user;
+            SocketGroup = cfg.group;
+            SocketMode = cfg.mode;
+            DirectoryMode = cfg.mode;
           };
         };
 
@@ -101,17 +108,17 @@ in {
             NIXOS_SERVICE_ATTIC_SERVER_NAME = cfg.serverName;
             NIXOS_SERVICE_ATTIC_URL = cfg.serverUrl;
             NIXOS_SERVICE_ATTIC_SECRET_PATH = cfg.secretPath;
-            NIXOS_SERVICE_SOCK_PATH = "${socketPath}";
+            NIXOS_SERVICE_SOCK_PATH = "${socket}";
             XDG_CONFIG_HOME = "/var/lib/nixos-service";
           };
 
           serviceConfig = {
             # User = cfg.user;
             # Group = cfg.group;
-            # RuntimeDirectory = runtimeDirectory;
-            # RuntimeDirectoryMode = cfg.mode;
-            # StateDirectory = "nixos-service";
-            # StateDirectoryMode = cfg.mode;
+            RuntimeDirectory = runtimeDirectory;
+            RuntimeDirectoryMode = cfg.mode;
+            StateDirectory = runtimeDirectory;
+            StateDirectoryMode = cfg.mode;
             ExecStart = "${lib.getExe pkgs.nixos-service} socket";
             Restart = "on-failure";
             RestartSec = 5;
