@@ -141,7 +141,7 @@ func handleSocket(ctx context.Context) {
 		Handler: mux,
 	}
 
-	listeners, err := activation.Listeners(true) // ❶
+	listeners, err := activation.Listeners() // ❶
 	if err != nil {
 		log.Panicf("cannot retrieve listeners: %s", err)
 	}
