@@ -45,7 +45,7 @@ in {
   };
 
   config = let
-    socketPath = "nixos-service/daemon.sock";
+    socketPath = "/run/nixos-service/daemon.sock";
     curlCommand = pkgs.writeScript "upload-to-cache.sh" ''
       #!/bin/sh
       set -eu
@@ -54,7 +54,7 @@ in {
 
       echo "Uploading paths $OUT_PATHS"
 
-      ${lib.getExe pkgs.nixos-service} upload -s "$HOME/${socketPath}" "$OUT_PATHS" || true
+      ${lib.getExe pkgs.nixos-service} upload -s "${socketPath}" "$OUT_PATHS" || true
     '';
   in
     mkIf cfg.enable {
@@ -63,7 +63,7 @@ in {
         trusted-users = ["${cfg.user}"];
       };
 
-      environment.variables.NIXOS_SERVICE_SOCK_PATH = "$HOME/${socketPath}";
+      environment.variables.NIXOS_SERVICE_SOCK_PATH = "${socketPath}";
 
       # users = {
       #   users = {
@@ -76,14 +76,14 @@ in {
       #   groups."${cfg.group}" = {};
       # };
 
-      systemd.user = {
+      systemd = {
         sockets.nixos-service = {
           description = "Socket to communicate with myservice";
           # listenStreams = [socket];
 
           wantedBy = ["sockets.target"];
           socketConfig = {
-            ListenStream = "%t/${socketPath}";
+            ListenStream = "${socketPath}";
             RuntimeDirectory = "nixos-service";
           };
         };
@@ -101,8 +101,8 @@ in {
             NIXOS_SERVICE_ATTIC_SERVER_NAME = cfg.serverName;
             NIXOS_SERVICE_ATTIC_URL = cfg.serverUrl;
             NIXOS_SERVICE_ATTIC_SECRET_PATH = cfg.secretPath;
-            NIXOS_SERVICE_SOCK_PATH = "$HOME/${socketPath}";
-            # XDG_CONFIG_HOME = "/var/lib/nixos-service";
+            NIXOS_SERVICE_SOCK_PATH = "${socketPath}";
+            XDG_CONFIG_HOME = "/var/lib/nixos-service";
           };
 
           serviceConfig = {
